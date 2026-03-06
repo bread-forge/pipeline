@@ -1,2 +1,4 @@
-bread-forge/pipeline/src/pipeline/cycle/runner.py
-bread-forge/pipeline/src/pipeline/dispatch/agent.py
+bread-forge/pipeline/tests/test_budget.py
+bread-forge/pipeline/tests/test_telemetry.py
+bread-forge/pipeline/tests/test_status_command.py
+bread-forge/pipeline/tests/test_telemetry_command.py
