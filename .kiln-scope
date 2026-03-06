@@ -1,4 +1,5 @@
-bread-forge/pipeline/src/pipeline/cycle/__init__.py
-bread-forge/pipeline/src/pipeline/cycle/phase.py
-bread-forge/pipeline/src/pipeline/cycle/state_machine.py
-bread-forge/pipeline/src/pipeline/cycle/bead.py
+bread-forge/pipeline/src/pipeline/__init__.py
+bread-forge/pipeline/src/pipeline/cli/__init__.py
+bread-forge/pipeline/src/pipeline/cli/main.py
+bread-forge/pipeline/src/pipeline/cli/commands/cycle.py
+bread-forge/pipeline/pyproject.toml
