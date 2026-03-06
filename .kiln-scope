@@ -1,2 +1,2 @@
-src/pipeline/cli/commands/gate.py
-src/pipeline/cli/main.py
+bread-forge/pipeline/src/pipeline/cli/commands/gate.py
+bread-forge/pipeline/src/pipeline/cli/main.py
