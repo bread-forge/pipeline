@@ -1,4 +1,4 @@
-tests/test_dispatcher.py
-tests/test_trigger.py
-tests/test_config.py
-tests/test_run_command.py
+bread-forge/pipeline/tests/test_dispatcher.py
+bread-forge/pipeline/tests/test_trigger.py
+bread-forge/pipeline/tests/test_config.py
+bread-forge/pipeline/tests/test_run_command.py
