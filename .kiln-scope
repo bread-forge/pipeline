@@ -1,5 +1,6 @@
-bread-forge/pipeline/src/pipeline/__init__.py
-bread-forge/pipeline/src/pipeline/cli/__init__.py
-bread-forge/pipeline/src/pipeline/cli/main.py
-bread-forge/pipeline/src/pipeline/cli/commands/cycle.py
-bread-forge/pipeline/pyproject.toml
+bread-forge/pipeline/tests/__init__.py
+bread-forge/pipeline/tests/test_events.py
+bread-forge/pipeline/tests/test_state_machine.py
+bread-forge/pipeline/tests/test_lock.py
+bread-forge/pipeline/tests/test_store.py
+bread-forge/pipeline/tests/test_cli.py
