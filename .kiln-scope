@@ -1,3 +1,6 @@
 bread-forge/pipeline/src/pipeline/telemetry/__init__.py
 bread-forge/pipeline/src/pipeline/telemetry/store.py
 bread-forge/pipeline/src/pipeline/telemetry/metrics.py
+bread-forge/pipeline/src/pipeline/budget/__init__.py
+bread-forge/pipeline/src/pipeline/budget/tracker.py
+bread-forge/pipeline/src/pipeline/events/types.py
