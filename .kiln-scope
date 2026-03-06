@@ -1,1 +1,2 @@
-bread-forge/pipeline/src/pipeline/gate/app.py
+bread-forge/pipeline/src/pipeline/cli/commands/gate.py
+bread-forge/pipeline/src/pipeline/cli/main.py
