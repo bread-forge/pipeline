@@ -7,7 +7,7 @@ beads directly — all store access goes through this module.
 from pathlib import Path
 
 from beads.store import BeadStore
-from beads.types import CycleBead, ProposalBead
+from beads.types import CycleBead, ProposalBead, SuppressionBead
 
 # Default location for all pipeline bead data.
 BEADS_DIR: Path = Path.home() / ".pipeline" / "beads"
@@ -73,6 +73,35 @@ def read_proposal(store: BeadStore, proposal_id: str) -> ProposalBead | None:
         *proposal_id*.
     """
     return store.read_proposal(proposal_id)
+
+
+def write_suppression(store: BeadStore, bead: SuppressionBead) -> None:
+    """Persist a :class:`~beads.types.SuppressionBead` to the store atomically.
+
+    Args:
+        store: The store to write to.
+        bead: The suppression bead to serialize and save.
+    """
+    store.write_suppression(bead)
+
+
+def list_active_suppressions(store: BeadStore, repo: str) -> list[SuppressionBead]:
+    """List active :class:`~beads.types.SuppressionBead` objects for *repo*.
+
+    A suppression is active if :meth:`~beads.types.SuppressionBead.is_active`
+    returns ``True`` — i.e. it is a permanent rejection (``expires_at`` is
+    ``None``) or its expiry has not yet passed.
+
+    Args:
+        store: The store to read from.  Must be scoped to *repo* via
+            :func:`get_store`.
+        repo: GitHub repository in ``owner/name`` format.  Passed for
+            clarity; the store is already scoped to this repo.
+
+    Returns:
+        A list of active ``SuppressionBead`` objects (may be empty).
+    """
+    return [s for s in store.list_active_suppressions(repo=repo) if s.is_active()]
 
 
 def list_proposals(
