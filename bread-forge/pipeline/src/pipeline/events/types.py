@@ -101,6 +101,18 @@ class CycleCompleted:
     event_type: str = field(default="CycleCompleted", init=False)
 
 
+@dataclass
+class BudgetExceeded(Exception):
+    """Raised and emitted when accumulated agent costs exceed the cycle budget cap."""
+
+    cycle_id: str
+    timestamp: datetime
+    agent_id: str
+    total_usd: float
+    limit_usd: float
+    event_type: str = field(default="BudgetExceeded", init=False)
+
+
 # Union of all event types — used for type annotations throughout the pipeline.
 AnyEvent = (
     CycleStarted
@@ -112,6 +124,7 @@ AnyEvent = (
     | ExecutionStarted
     | VerificationVerdict
     | CycleCompleted
+    | BudgetExceeded
 )
 
 # Maps event_type string → dataclass constructor. Used by EventLog.replay().
@@ -125,4 +138,5 @@ EVENT_REGISTRY: dict[str, type] = {
     "ExecutionStarted": ExecutionStarted,
     "VerificationVerdict": VerificationVerdict,
     "CycleCompleted": CycleCompleted,
+    "BudgetExceeded": BudgetExceeded,
 }
