@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Union
 
 
 @dataclass(frozen=True)
@@ -103,17 +102,17 @@ class CycleCompleted:
 
 
 # Union of all event types — used for type annotations throughout the pipeline.
-AnyEvent = Union[
-    CycleStarted,
-    AgentDispatched,
-    AgentCompleted,
-    SynthesisStarted,
-    ProposalSubmitted,
-    GateDecision,
-    ExecutionStarted,
-    VerificationVerdict,
-    CycleCompleted,
-]
+AnyEvent = (
+    CycleStarted
+    | AgentDispatched
+    | AgentCompleted
+    | SynthesisStarted
+    | ProposalSubmitted
+    | GateDecision
+    | ExecutionStarted
+    | VerificationVerdict
+    | CycleCompleted
+)
 
 # Maps event_type string → dataclass constructor. Used by EventLog.replay().
 EVENT_REGISTRY: dict[str, type] = {
