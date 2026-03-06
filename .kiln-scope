@@ -1,2 +1,5 @@
-src/pipeline/config/__init__.py
-src/pipeline/config/loader.py
+bread-forge/pipeline/src/pipeline/config/__init__.py
+bread-forge/pipeline/src/pipeline/config/loader.py
+bread-forge/pipeline/tests/test_config.py
+bread-forge/pipeline/pyproject.toml
+bread-forge/pipeline/uv.lock
