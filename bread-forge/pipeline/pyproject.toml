@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pipeline"
+version = "0.1.0"
+description = "Pipeline orchestrator — cycle management CLI"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12",
+    "pydantic>=2.0",
+    "beads",
+]
+
+[project.scripts]
+pipeline = "pipeline.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pipeline"]
+
+[tool.uv.sources]
+beads = { path = "/Users/bread/Documents/dev/github/bread-forge/beads", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
