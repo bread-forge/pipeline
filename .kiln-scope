@@ -1,18 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-bread-forge/pipeline/src/pipeline/config/__init__.py
-bread-forge/pipeline/src/pipeline/config/loader.py
-bread-forge/pipeline/tests/test_config.py
-bread-forge/pipeline/pyproject.toml
-bread-forge/pipeline/uv.lock
-=======
-src/pipeline/dispatch/__init__.py
-src/pipeline/dispatch/agent.py
-src/pipeline/cycle/state_machine.py
->>>>>>> 7c02ecb (chore: set kiln scope for graph-dispatch)
-=======
-bread-forge/pipeline/src/pipeline/dispatch/__init__.py
-bread-forge/pipeline/src/pipeline/dispatch/agent.py
-bread-forge/pipeline/src/pipeline/cycle/state_machine.py
-bread-forge/pipeline/tests/test_dispatch.py
->>>>>>> b6a8e32 (feat(dispatch): implement AgentDispatcher and extend CycleStateMachine)
+bread-forge/pipeline/src/pipeline/trigger/__init__.py
+bread-forge/pipeline/src/pipeline/trigger/engine.py
+bread-forge/pipeline/src/pipeline/trigger/github.py
+bread-forge/pipeline/src/pipeline/trigger/schedule.py
