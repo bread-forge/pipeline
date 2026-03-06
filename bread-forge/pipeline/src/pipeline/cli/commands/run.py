@@ -15,6 +15,7 @@ from typing import Annotated
 import typer
 from beads.types import CycleBead, FindingBead
 
+from pipeline.budget.tracker import BudgetTracker
 from pipeline.config.loader import load_config
 from pipeline.cycle.phase import CyclePhase
 from pipeline.dispatch import AgentDispatcher, AgentDispatchError
@@ -96,6 +97,14 @@ def run(
             "--path", help="Local filesystem path to the repository root. Defaults to '.'."
         ),
     ] = Path("."),
+    max_analysis_cost: Annotated[
+        float | None,
+        typer.Option(
+            "--max-analysis-cost",
+            help="Maximum USD cost for the analysis phase. "
+            "Agents are skipped once this cap is exceeded.",
+        ),
+    ] = None,
 ) -> None:
     """Dispatch configured or specified agents and print a synthesis stub.
 
@@ -113,11 +122,18 @@ def run(
     bead = CycleBead(cycle_id=cycle_id, repo=repo, phase=CyclePhase.ANALYSIS)
     write_cycle(store, bead)
 
+    budget_tracker = (
+        BudgetTracker(cycle_id=cycle_id, cap_usd=max_analysis_cost)
+        if max_analysis_cost is not None
+        else None
+    )
+
     dispatcher = AgentDispatcher(
         cycle_id=cycle_id,
         repo=repo,
         store=store,
         event_log=event_log,
+        budget_tracker=budget_tracker,
     )
 
     try:
