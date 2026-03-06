@@ -9,6 +9,7 @@ from ANALYSIS to SYNTHESIS and persists the new phase to the store.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from collections.abc import Sequence
@@ -18,10 +19,11 @@ from pathlib import Path
 from beads.store import BeadStore
 from beads.types import CycleBead, FindingBead
 
+from pipeline.budget.tracker import BudgetTracker
 from pipeline.cycle.bead import write_phase_transition
 from pipeline.cycle.state_machine import CycleEvent, CycleStateMachine
 from pipeline.events.log import EventLog
-from pipeline.events.types import AgentCompleted, AgentDispatched
+from pipeline.events.types import AgentCompleted, AgentDispatched, BudgetExceeded
 
 __all__ = ["AgentDispatchError", "AgentDispatcher"]
 
@@ -62,12 +64,14 @@ class AgentDispatcher:
         store: BeadStore,
         event_log: EventLog,
         state_machine: CycleStateMachine | None = None,
+        budget_tracker: BudgetTracker | None = None,
     ) -> None:
         self._cycle_id = cycle_id
         self._repo = repo
         self._store = store
         self._event_log = event_log
         self._sm = state_machine if state_machine is not None else CycleStateMachine()
+        self._budget_tracker = budget_tracker
 
     def dispatch(
         self,
@@ -79,7 +83,11 @@ class AgentDispatcher:
 
         Agents are run sequentially in the order given.  If any agent process
         exits with a non-zero return code an :class:`AgentDispatchError` is
-        raised immediately — subsequent agents are not started.
+        raised immediately — subsequent agents are not started.  When a
+        :class:`~pipeline.budget.tracker.BudgetTracker` is configured, cost is
+        recorded after each successful agent; if the running total exceeds the
+        cap a :class:`~pipeline.events.types.BudgetExceeded` event is emitted
+        to the event log and remaining agents are skipped.
 
         Args:
             agent_names: Ordered sequence of agent identifiers to run.  Each
@@ -100,7 +108,13 @@ class AgentDispatcher:
                 (e.g. the bead is not in ANALYSIS phase).
         """
         for agent_name in agent_names:
-            self._run_one(agent_name, repo_path)
+            cost = self._run_one(agent_name, repo_path)
+            if self._budget_tracker is not None:
+                try:
+                    self._budget_tracker.record_cost(agent_name, cost)
+                except BudgetExceeded as exc:
+                    self._event_log.append(exc)
+                    break
 
         cycle_findings = self._collect_findings()
         next_phase = self._advance_to_synthesis(bead, cycle_findings)
@@ -111,12 +125,16 @@ class AgentDispatcher:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _run_one(self, agent_name: str, repo_path: Path) -> None:
+    def _run_one(self, agent_name: str, repo_path: Path) -> float:
         """Launch a single repo-audit subprocess and emit lifecycle events.
 
         Args:
             agent_name: Logical name for this agent (used in events and env).
             repo_path: Path passed to ``repo-audit run``.
+
+        Returns:
+            The cost in USD reported by the agent via JSON stdout, or 0.0 if
+            the agent did not report a cost.
 
         Raises:
             AgentDispatchError: When the subprocess exits with a non-zero code.
@@ -154,6 +172,24 @@ class AgentDispatcher:
                 f"Agent {agent_name!r} exited with code {result.returncode}. "
                 f"stderr: {result.stderr.strip()!r}"
             )
+
+        return self._parse_agent_cost(result.stdout)
+
+    @staticmethod
+    def _parse_agent_cost(stdout: str) -> float:
+        """Parse cost_usd from agent JSON stdout, returning 0.0 on failure.
+
+        Agents may optionally report their LLM cost by writing a JSON object
+        with a ``cost_usd`` key to stdout.  If the output is not valid JSON or
+        lacks that key, zero cost is assumed — existing agents that produce no
+        structured output are unaffected.
+        """
+        try:
+            data = json.loads(stdout)
+            cost = data.get("cost_usd", 0.0)
+            return float(cost) if isinstance(cost, (int, float)) else 0.0
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            return 0.0
 
     def _collect_findings(self) -> list[FindingBead]:
         """Return all findings for this cycle from the store.
