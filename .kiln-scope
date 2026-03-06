@@ -1,2 +1,4 @@
-bread-forge/pipeline/src/pipeline/gate/__init__.py
-bread-forge/pipeline/src/pipeline/gate/actions.py
+bread-forge/pipeline/src/pipeline/gate/widgets/__init__.py
+bread-forge/pipeline/src/pipeline/gate/widgets/proposal_list.py
+bread-forge/pipeline/src/pipeline/gate/widgets/proposal_detail.py
+bread-forge/pipeline/src/pipeline/gate/widgets/action_prompt.py
