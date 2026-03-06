@@ -1,6 +1,2 @@
-bread-forge/pipeline/tests/__init__.py
-bread-forge/pipeline/tests/test_events.py
-bread-forge/pipeline/tests/test_state_machine.py
-bread-forge/pipeline/tests/test_lock.py
-bread-forge/pipeline/tests/test_store.py
-bread-forge/pipeline/tests/test_cli.py
+src/pipeline/config/__init__.py
+src/pipeline/config/loader.py
