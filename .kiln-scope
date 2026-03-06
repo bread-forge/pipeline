@@ -1,4 +1,4 @@
-bread-forge/pipeline/tests/test_budget.py
-bread-forge/pipeline/tests/test_telemetry.py
-bread-forge/pipeline/tests/test_status_command.py
-bread-forge/pipeline/tests/test_telemetry_command.py
+src/pipeline/cli/commands/run.py
+src/pipeline/cli/commands/status.py
+src/pipeline/cli/commands/telemetry.py
+src/pipeline/cli/main.py
