@@ -1,4 +1,3 @@
-bread-forge/pipeline/src/pipeline/trigger/__init__.py
-bread-forge/pipeline/src/pipeline/trigger/engine.py
-bread-forge/pipeline/src/pipeline/trigger/github.py
-bread-forge/pipeline/src/pipeline/trigger/schedule.py
+src/pipeline/cli/commands/run.py
+src/pipeline/cli/commands/watch.py
+src/pipeline/cli/main.py
