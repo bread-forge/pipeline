@@ -1,3 +1,4 @@
-bread-forge/pipeline/src/pipeline/cli/commands/run.py
-bread-forge/pipeline/src/pipeline/cli/commands/watch.py
-bread-forge/pipeline/src/pipeline/cli/main.py
+tests/test_dispatcher.py
+tests/test_trigger.py
+tests/test_config.py
+tests/test_run_command.py
