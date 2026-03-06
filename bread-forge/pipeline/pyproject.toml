@@ -20,7 +20,7 @@ pipeline = "pipeline.cli.main:app"
 packages = ["src/pipeline"]
 
 [tool.uv.sources]
-beads = { path = "/Users/bread/Documents/dev/github/bread-forge/beads", editable = true }
+beads = { git = "https://github.com/bread-forge/beads.git" }
 
 [dependency-groups]
 dev = [

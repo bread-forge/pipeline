@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bread-forge/pipeline
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4

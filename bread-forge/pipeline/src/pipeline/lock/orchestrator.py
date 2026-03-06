@@ -35,13 +35,13 @@ class OrchestratorLock:
         self._fd = os.open(self._lock_path, os.O_CREAT | os.O_RDWR)
         try:
             fcntl.flock(self._fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
+        except BlockingIOError as err:
             os.close(self._fd)
             self._fd = None
             raise LockAcquisitionError(
                 f"Another pipeline cycle is already active for "
                 f"{self._owner}/{self._repo}. Lock: {self._lock_path}"
-            )
+            ) from err
         return self
 
     def __exit__(

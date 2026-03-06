@@ -7,8 +7,9 @@ current phase is complete before advancing.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any
 
 from beads.types import CycleBead
 
@@ -118,10 +119,10 @@ class CycleStateMachine:
         """
         try:
             return CyclePhase(bead.phase)
-        except ValueError:
+        except ValueError as err:
             raise ValueError(
                 f"Unknown phase value {bead.phase!r} in bead {bead.cycle_id!r}"
-            )
+            ) from err
 
     def advance(
         self,
