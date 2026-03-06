@@ -1,9 +1,9 @@
 """Cycle phase definitions."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class CyclePhase(str, Enum):
+class CyclePhase(StrEnum):
     """Ordered phases of a single pipeline cycle.
 
     Values match the ``phase`` field of :class:`beads.types.CycleBead` so that
