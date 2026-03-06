@@ -1,2 +1,2 @@
-src/pipeline/store/beadstore.py
-src/pipeline/store/__init__.py
+bread-forge/pipeline/src/pipeline/store/beadstore.py
+bread-forge/pipeline/src/pipeline/store/__init__.py
