@@ -1,3 +1,2 @@
-bread-forge/pipeline/src/pipeline/suppression/__init__.py
-bread-forge/pipeline/src/pipeline/suppression/bead_writer.py
-bread-forge/pipeline/src/pipeline/suppression/filter.py
+bread-forge/pipeline/src/pipeline/cli/commands/suppressions.py
+bread-forge/pipeline/src/pipeline/cli/main.py
