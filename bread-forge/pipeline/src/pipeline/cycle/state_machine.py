@@ -21,7 +21,9 @@ from pipeline.cycle.phase import CyclePhase
 
 # Event types that mark a phase as complete when at least one is present.
 _PHASE_COMPLETION_EVENT_TYPES: dict[CyclePhase, frozenset[str]] = {
-    CyclePhase.ANALYSIS: frozenset({"finding_added"}),
+    # ANALYSIS completes when findings exist OR when all dispatched agents report
+    # completion (allowing zero-finding cycles to still advance to synthesis).
+    CyclePhase.ANALYSIS: frozenset({"finding_added", "all_agents_completed"}),
     CyclePhase.SYNTHESIS: frozenset({"proposal_added"}),
     CyclePhase.GATE: frozenset({"proposal_approved"}),
     CyclePhase.EXECUTION: frozenset({"execution_completed"}),
