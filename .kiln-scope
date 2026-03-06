@@ -1,2 +1,2 @@
-tests/test_gate_actions.py
-tests/test_gate_app.py
+bread-forge/pipeline/tests/test_gate_actions.py
+bread-forge/pipeline/tests/test_gate_app.py
