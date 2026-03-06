@@ -71,12 +71,18 @@ The TUI shows a two-pane layout: the left pane lists proposals ordered by status
 | `?` | Show help overlay |
 | `q` | Quit |
 
-Each action updates the `ProposalBead` status in the store and appends a `GateDecision` event to the event log. No subprocess dispatch occurs during the gate phase in this milestone.
+Each action updates the `ProposalBead` status in the store and appends a `GateDecision` event to the event log.
 
 ### Cycle management
 
 ```
 pipeline cycle --help
+```
+
+### Suppression management
+
+```
+pipeline suppressions --help
 ```
 
 ## Configuration
@@ -92,21 +98,27 @@ repos:
     analysis_agents:
       - depth
       - coverage
+    budget_cap_usd: 5.00
 ```
+
+`budget_cap_usd` is optional. When set, the dispatcher raises `BudgetExceeded` and halts further agent dispatches for the cycle once accumulated costs exceed the cap.
 
 ## Module overview
 
 | Module | Path | Description |
 |--------|------|-------------|
 | `config` | `src/pipeline/config/` | Reads and writes `~/.pipeline/config.yaml` using Pydantic models. |
-| `dispatch` | `src/pipeline/dispatch/` | `AgentDispatcher` — runs `repo-audit` subprocesses, emits `AgentDispatched`/`AgentCompleted` events, and signals ANALYSIS→SYNTHESIS. |
+| `dispatch` | `src/pipeline/dispatch/` | `AgentDispatcher` — runs `repo-audit` subprocesses, emits `AgentDispatched`/`AgentCompleted` events, enforces budget caps via `BudgetTracker`, and signals ANALYSIS→SYNTHESIS. |
 | `cycle` | `src/pipeline/cycle/` | `CycleStateMachine` (phase transitions), `CyclePhase` enum, and bead write helpers. |
 | `trigger` | `src/pipeline/trigger/` | `TriggerEngine` polling loop with `pr_merge`, `daily`, and `manual` trigger types. |
-| `events` | `src/pipeline/events/` | `EventLog` and typed event dataclasses (`AgentDispatched`, `AgentCompleted`, `GateDecision`, …). |
+| `events` | `src/pipeline/events/` | `EventLog` and typed event dataclasses (`AgentDispatched`, `AgentCompleted`, `GateDecision`, `BudgetExceeded`, …). |
 | `store` | `src/pipeline/store/` | Thin wrappers around `BeadStore` for cycle and proposal persistence (`read_cycle`, `write_cycle`, `read_proposal`, `write_proposal`, `list_proposals`). |
 | `lock` | `src/pipeline/lock/` | Orchestrator lock to prevent concurrent pipeline runs on the same repo. |
 | `gate` | `src/pipeline/gate/` | Gate phase: `GateActions` (approve/reject/defer logic), `GateApp` (Textual TUI), and widgets (`ProposalList`, `ProposalDetail`, `ActionPrompt`). |
-| `cli` | `src/pipeline/cli/` | Typer app wiring `run`, `watch`, `cycle`, and `gate` subcommands. |
+| `suppression` | `src/pipeline/suppression/` | Suppression filter and bead writer — marks findings as suppressed so they are excluded from future proposal generation. |
+| `budget` | `src/pipeline/budget/` | `BudgetTracker` — accumulates USD cost per cycle and raises `BudgetExceeded` when an optional hard cap is breached. |
+| `telemetry` | `src/pipeline/telemetry/` | `TelemetryStore` (append-only JSONL records per repo at `~/.pipeline/telemetry/`) and `CycleMetrics` / `compute_cycle_metrics` for approval rates, review times, and cost summaries. Also provides `check_review_time_alert` to flag when gate review is becoming a bottleneck. |
+| `cli` | `src/pipeline/cli/` | Typer app wiring `run`, `watch`, `cycle`, `gate`, and `suppressions` subcommands. |
 
 ## Tests
 
