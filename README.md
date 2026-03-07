@@ -1,69 +1,133 @@
 # pipeline
 
-Pipeline orchestrator — cycle management CLI for bread-forge repos.
+Pipeline orchestrator — dispatch repo-audit agents and manage analysis cycles from the command line.
 
-`pipeline` drives a structured, phase-gated development cycle (analysis → synthesis → gate → execution → verification) for a GitHub repository. Each cycle is tracked as a persistent bead, guarded by an exclusive flock-based lock to prevent concurrent runs, and auditable through a per-cycle JSONL event log. The CLI composes all four core modules into a single `pipeline` command.
+The pipeline drives a multi-phase cycle (ANALYSIS → SYNTHESIS → GATE → EXECUTION → VERIFICATION) for each repository. It launches `repo-audit` agents as subprocesses, collects their findings into a `BeadStore`, and advances the cycle state machine when all agents complete. A trigger engine watches for GitHub PR merges or a daily schedule and fires the pipeline automatically. Proposals produced by the synthesis phase are reviewed interactively in a terminal UI before any execution takes place.
 
 ## Install
 
-Requires Python 3.11+ and [uv](https://github.com/astral-sh/uv).
+Requires Python 3.11+. Dependencies are managed with [uv](https://github.com/astral-sh/uv).
 
-```sh
+```
 uv sync
 ```
 
-The `pipeline` entry point is registered automatically:
+Or with pip:
 
-```sh
-uv run pipeline --help
+```
+pip install -e .
+```
+
+The `beads` dependency is resolved from `https://github.com/bread-forge/beads.git`.
+
+The `pipeline gate` command requires [Textual](https://github.com/Textualize/textual), which is not installed by default:
+
+```
+uv add textual
 ```
 
 ## Usage
 
-```sh
-# Start a new cycle for a repo
-pipeline cycle start --repo owner/repo --trigger "weekly audit"
+### One-shot run
 
-# Check current phase and event summary
-pipeline cycle status <cycle-id> --repo owner/repo
-
-# Replay the full event log for a cycle
-pipeline cycle replay <cycle-id> --repo owner/repo
-```
-
-State is stored under `~/.pipeline/`:
-
-| Path | Contents |
-|---|---|
-| `~/.pipeline/beads/` | Cycle bead files (phase, timestamps) |
-| `~/.pipeline/events/<owner>/<repo>/<cycle-id>.jsonl` | Per-cycle event log |
-| `~/.pipeline/locks/` | flock files (one per repo) |
-
-## Modules
-
-| Module | Description |
-|---|---|
-| `pipeline.cycle` | `CyclePhase` enum, `CycleStateMachine` (pure phase-transition logic), and `write_phase_transition` for atomic bead persistence |
-| `pipeline.lock` | `OrchestratorLock` — flock-based exclusive lock preventing concurrent cycles for the same repo |
-| `pipeline.store` | `BeadStore` factory and `read_cycle`/`write_cycle` helpers; all bead I/O goes through this module |
-| `pipeline.cli` | Typer app with `cycle start`, `cycle status`, and `cycle replay` subcommands |
-
-## Cycle phases
+Dispatch agents against a repository and print a synthesis proposal list:
 
 ```
-analysis → synthesis → gate → execution → verification → complete
+pipeline run --repo owner/repo
+pipeline run --repo owner/repo --agents depth --agents coverage --path /path/to/repo
 ```
 
-Each phase advances only when the required event type appears in the cycle's event log (e.g. `finding_added` completes `analysis`, `proposal_approved` completes `gate`).
+Agents default to the `analysis_agents` list in `~/.pipeline/config.yaml` when `--agents` is not passed.
+
+### Watch mode
+
+Poll continuously for a trigger event and fire the pipeline each time it fires:
+
+```
+pipeline watch --repo owner/repo --on pr_merge
+pipeline watch --repo owner/repo --on daily --interval 300
+```
+
+Valid `--on` values: `pr_merge`, `daily`, `manual`.
+`pr_merge` requires `GH_TOKEN` in the environment.
+Press Ctrl-C to stop.
+
+### Gate review
+
+Open the interactive TUI to review pending proposals for a repository:
+
+```
+pipeline gate --repo owner/repo
+pipeline gate --repo owner/repo --cycle <cycle-id>
+```
+
+The TUI shows a two-pane layout: the left pane lists proposals ordered by status (pending first), the right pane shows the full analysis for the selected proposal. Keyboard shortcuts:
+
+| Key | Action |
+|-----|--------|
+| `a` | Approve the selected proposal |
+| `r` | Reject with a required reason |
+| `d` | Defer until a date (`YYYY-MM-DD`) |
+| `?` | Show help overlay |
+| `q` | Quit |
+
+Each action updates the `ProposalBead` status in the store and appends a `GateDecision` event to the event log.
+
+### Cycle management
+
+```
+pipeline cycle --help
+```
+
+### Suppression management
+
+```
+pipeline suppressions --help
+```
+
+## Configuration
+
+Config lives at `~/.pipeline/config.yaml`:
+
+```yaml
+repos:
+  owner/repo:
+    triggers:
+      - pr_merge
+      - daily
+    analysis_agents:
+      - depth
+      - coverage
+    budget_cap_usd: 5.00
+```
+
+`budget_cap_usd` is optional. When set, the dispatcher raises `BudgetExceeded` and halts further agent dispatches for the cycle once accumulated costs exceed the cap.
+
+## Module overview
+
+| Module | Path | Description |
+|--------|------|-------------|
+| `config` | `src/pipeline/config/` | Reads and writes `~/.pipeline/config.yaml` using Pydantic models. |
+| `dispatch` | `src/pipeline/dispatch/` | `AgentDispatcher` — runs `repo-audit` subprocesses, emits `AgentDispatched`/`AgentCompleted` events, enforces budget caps via `BudgetTracker`, and signals ANALYSIS→SYNTHESIS. |
+| `cycle` | `src/pipeline/cycle/` | `CycleStateMachine` (phase transitions), `CyclePhase` enum, and bead write helpers. |
+| `trigger` | `src/pipeline/trigger/` | `TriggerEngine` polling loop with `pr_merge`, `daily`, and `manual` trigger types. |
+| `events` | `src/pipeline/events/` | `EventLog` and typed event dataclasses (`AgentDispatched`, `AgentCompleted`, `GateDecision`, `BudgetExceeded`, …). |
+| `store` | `src/pipeline/store/` | Thin wrappers around `BeadStore` for cycle and proposal persistence (`read_cycle`, `write_cycle`, `read_proposal`, `write_proposal`, `list_proposals`). |
+| `lock` | `src/pipeline/lock/` | Orchestrator lock to prevent concurrent pipeline runs on the same repo. |
+| `gate` | `src/pipeline/gate/` | Gate phase: `GateActions` (approve/reject/defer logic), `GateApp` (Textual TUI), and widgets (`ProposalList`, `ProposalDetail`, `ActionPrompt`). |
+| `suppression` | `src/pipeline/suppression/` | Suppression filter and bead writer — marks findings as suppressed so they are excluded from future proposal generation. |
+| `budget` | `src/pipeline/budget/` | `BudgetTracker` — accumulates USD cost per cycle and raises `BudgetExceeded` when an optional hard cap is breached. |
+| `telemetry` | `src/pipeline/telemetry/` | `TelemetryStore` (append-only JSONL records per repo at `~/.pipeline/telemetry/`) and `CycleMetrics` / `compute_cycle_metrics` for approval rates, review times, and cost summaries. Also provides `check_review_time_alert` to flag when gate review is becoming a bottleneck. |
+| `cli` | `src/pipeline/cli/` | Typer app wiring `run`, `watch`, `cycle`, `gate`, and `suppressions` subcommands. |
 
 ## Tests
 
-```sh
+```
 uv run pytest
 ```
 
-## Lint
+Lint:
 
-```sh
+```
 uv run ruff check src tests
 ```
